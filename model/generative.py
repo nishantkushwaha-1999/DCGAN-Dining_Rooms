@@ -1,5 +1,5 @@
 import os
-import platform
+import numpy as np
 from tqdm import tqdm
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -19,13 +19,17 @@ class DCGANMNIST():
       self.initialize_checkpoint(name)
 
    def __is_colab(self):
-      return platform.system() == 'Linux' and platform.node().startswith('colab-')
+      try:
+         import google.colab
+         return True
+      except ImportError:
+         return False
 
    def initialize_checkpoint(self, name):
       if self.__is_colab():
          from google.colab import drive
          drive.mount('/content/drive')
-         self.checkpoint_dir = f'/content/drive/MyDrive/model_{name}/training_checkpoints_{name}'
+         self.checkpoint_dir = f'/drive/MyDrive/model_{name}/training_checkpoints_{name}'
       else:
          self.checkpoint_dir = f'./model_{name}/training_checkpoints_{name}'
       
@@ -143,7 +147,7 @@ class DCGANMNIST():
             self.generate_and_save_images(epoch + 1, seed, n_examples)
    
    def generate_and_save_images(self, epoch, test_input, n_examples):
-      dim = tf.sqrt(n_examples).astype(int())
+      dim = int(np.ceil(np.sqrt(n_examples)))
       plt_dims_x, plt_dims_y = (dim+1, dim+1)
       predictions = self.__generator_mnist(test_input, training=False)
 
@@ -154,10 +158,16 @@ class DCGANMNIST():
          plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
          plt.axis('off')
 
-      os.makedirs(f'./model_{self.name}', exist_ok=True)
-      os.makedirs(f'./model_{self.name}/images', exist_ok=True)
-      
-      plt.savefig(f'./model_{self.name}/images/image_at_epoch_{epoch}.png')
+      if self.__is_colab():
+         os.makedirs(f'./drive/MyDrive/model_{self.name}', exist_ok=True)
+         os.makedirs(f'./drive/MyDrive/model_{self.name}/images', exist_ok=True)
+
+         plt.savefig(f'./drive/MyDrive/model_{self.name}/images/image_at_epoch_{epoch}.png')
+      else:
+         os.makedirs(f'./model_{self.name}', exist_ok=True)
+         os.makedirs(f'./model_{self.name}/images', exist_ok=True)
+         
+         plt.savefig(f'./model_{self.name}/images/image_at_epoch_{epoch}.png')
       # plt.show()
       plt.close(fig)
 
