@@ -1,4 +1,5 @@
 import os
+import platform
 from tqdm import tqdm
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -17,8 +18,17 @@ class DCGANMNIST():
 
       self.initialize_checkpoint(name)
 
+   def __is_colab(self):
+      return platform.system() == 'Linux' and platform.node().startswith('colab-')
+
    def initialize_checkpoint(self, name):
-      self.checkpoint_dir = f'./model_{name}/training_checkpoints_{name}'
+      if self.__is_colab():
+         from google.colab import drive
+         drive.mount('/content/drive')
+         self.checkpoint_dir = f'/content/drive/MyDrive/model_{name}/training_checkpoints_{name}'
+      else:
+         self.checkpoint_dir = f'./model_{name}/training_checkpoints_{name}'
+      
       self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
       self.checkpoint = tf.train.Checkpoint(generator_optimizer = self.generator_optimizer,
                                        discriminator_optimizer = self.discriminator_optimizer,
