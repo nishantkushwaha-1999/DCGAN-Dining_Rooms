@@ -1,5 +1,4 @@
 import tensorflow as tf
-from PIL import Image
 import tensorflow_datasets as tfds
 from model.generative import DCGAN
 
